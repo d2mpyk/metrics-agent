@@ -4,18 +4,31 @@ import time
 import threading
 import json
 import logging
+from logging.handlers import RotatingFileHandler
 import requests
 
 from config.settings import Settings
 from security.crypto import AESCipher
-from core.metrics import collect_metrics
+from core.collector import get_system_metrics
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s | %(levelname)s | %(message)s",
-)
-
+# Configuración del Logger
 logger = logging.getLogger("MetricsAgent")
+logger.setLevel(logging.INFO)
+
+if not logger.handlers:
+    formatter = logging.Formatter("%(asctime)s | %(levelname)s | %(message)s")
+
+    # 1. Handler de Consola
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(formatter)
+    logger.addHandler(console_handler)
+
+    # 2. Handler de Archivo Rotativo (5 MB por archivo, max 3 backups)
+    file_handler = RotatingFileHandler(
+        "agent.log", maxBytes=5 * 1024 * 1024, backupCount=3
+    )
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
 
 
 class MetricsAgent:
@@ -32,9 +45,13 @@ class MetricsAgent:
 
         while not self.shutdown_event.is_set():
             try:
-                metrics = collect_metrics()
+                metrics = get_system_metrics()
 
                 encrypted = self.cipher.encrypt(metrics)
+
+                # El servidor espera 'nonce', pero la librería de criptografía retorna 'iv'
+                if "iv" in encrypted:
+                    encrypted["nonce"] = encrypted.pop("iv")
 
                 logger.info("Metrics encrypted successfully")
                 logger.debug("Payload: %s", json.dumps(encrypted))

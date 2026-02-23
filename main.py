@@ -6,7 +6,8 @@ from core.credentials import CredentialManager
 from core.auth_flow import authenticate_device
 import logging
 
-if __name__ == "__main__":
+
+def main():
     settings = get_settings()
     cred_manager = CredentialManager()
 
@@ -29,3 +30,7 @@ if __name__ == "__main__":
         logging.info("Shutdown signal received, stopping agent...")
     finally:
         agent.stop()
+
+
+if __name__ == "__main__":
+    main()

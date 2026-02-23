@@ -112,3 +112,38 @@ def test_send_to_api_handles_error(mock_settings, mock_credentials, caplog):
 
         mock_post.assert_called_once()
         assert "Failed to send metrics to API" in caplog.text
+
+
+def test_run_loop_converts_iv_to_nonce(mock_settings, mock_credentials):
+    """
+    Verifica que el loop principal convierta la clave 'iv' a 'nonce'
+    antes de llamar a _send_to_api, asegurando compatibilidad con el servidor.
+    """
+    agent = MetricsAgent(mock_settings, mock_credentials)
+
+    # 1. Mockeamos el cifrado para que retorne explícitamente 'iv' (comportamiento de AESCipher)
+    agent.cipher = MagicMock()
+    agent.cipher.encrypt.return_value = {
+        "iv": "fake_iv_base64",
+        "ciphertext": "fake_data",
+    }
+
+    # 2. Mockeamos _send_to_api para detener el loop inmediatamente y verificar el payload
+    agent._send_to_api = MagicMock()
+
+    def stop_loop(*args, **kwargs):
+        agent.shutdown_event.set()
+
+    agent._send_to_api.side_effect = stop_loop
+
+    # 3. Ejecutamos (mockeando metrics para evitar uso de psutil real)
+    with patch("agent.get_system_metrics", return_value={"cpu": 1}):
+        agent.run()
+
+    # 4. Verificaciones
+    agent._send_to_api.assert_called_once()
+    payload_sent = agent._send_to_api.call_args[0][0]
+
+    assert "nonce" in payload_sent, "El payload debe contener la clave 'nonce'"
+    assert "iv" not in payload_sent, "El payload NO debe contener la clave 'iv'"
+    assert payload_sent["nonce"] == "fake_iv_base64"
