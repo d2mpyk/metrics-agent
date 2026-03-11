@@ -1,5 +1,6 @@
 # agent.py
 
+import os
 import time
 import threading
 import json
@@ -23,9 +24,13 @@ if not logger.handlers:
     console_handler.setFormatter(formatter)
     logger.addHandler(console_handler)
 
+    # Determinar ruta absoluta para el log
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    log_path = os.path.join(base_dir, "agent.log")
+
     # 2. Handler de Archivo Rotativo (5 MB por archivo, max 3 backups)
     file_handler = RotatingFileHandler(
-        "agent.log", maxBytes=5 * 1024 * 1024, backupCount=3
+        log_path, maxBytes=5 * 1024 * 1024, backupCount=3
     )
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)

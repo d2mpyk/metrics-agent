@@ -1,6 +1,6 @@
-requests>=2.31.0
-psutil>=5.9.0
-cryptography>=42.0.0
-pydantic>=2.0.0
-pydantic-settings>=2.0.0
-pytest>=8.0.0  # Dependencia de desarrollo para correr los tests
+requests>=2.31.0          # Para peticiones HTTP a la API (agent.py)
+psutil>=5.9.0             # Para obtener CPU, RAM y Disco (core/collector.py)
+cryptography>=42.0.0      # Para el cifrado AES-256 (security/crypto.py)
+pydantic>=2.0.0           # Validación de modelos de datos
+pydantic-settings>=2.0.0  # Gestión de configuración y variables de entorno (config/settings.py)
+pytest>=8.0.0             # Framework de pruebas (tests/)

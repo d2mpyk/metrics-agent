@@ -1,5 +1,8 @@
 # main.py
 
+import os
+import signal
+import sys
 from agent import MetricsAgent
 from config.settings import get_settings
 from core.credentials import CredentialManager
@@ -9,7 +12,12 @@ import logging
 
 def main():
     settings = get_settings()
-    cred_manager = CredentialManager()
+
+    # Asegurar ruta absoluta para las credenciales
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    cred_path = os.path.join(base_dir, "credentials.json")
+
+    cred_manager = CredentialManager(filepath=cred_path)
 
     if not cred_manager.exists():
         logging.info(
@@ -23,13 +31,21 @@ def main():
     if not credentials:
         raise RuntimeError("No se pudieron cargar las credenciales.")
 
+    # --- Inicio de la lógica del agente ---
     agent = MetricsAgent(settings, credentials)
-    try:
-        agent.run()
-    except KeyboardInterrupt:
-        logging.info("Shutdown signal received, stopping agent...")
-    finally:
+
+    # Manejador para un apagado limpio (Ctrl+C o systemctl stop)
+    def shutdown_handler(signum, frame):
+        logging.info(f"Señal de apagado {signum} recibida, deteniendo el agente...")
         agent.stop()
+
+    # Registrar los manejadores para las señales SIGINT (Ctrl+C) y SIGTERM (systemd)
+    signal.signal(signal.SIGINT, shutdown_handler)
+    signal.signal(signal.SIGTERM, shutdown_handler)
+
+    # El agente se ejecuta y bloquea aquí hasta que agent.stop() es llamado
+    agent.run()
+    logging.info("El agente se ha detenido limpiamente. Saliendo.")
 
 
 if __name__ == "__main__":
