@@ -1,20 +1,16 @@
 [Unit]
-Description=WISE Metrics Agent
-Documentation=https://github.com/d2mpyk/metrics
+Description=WISE Metrics Agent Service
 After=network.target
 
 [Service]
-# 1. Usuario y grupo para ejecutar el servicio (crear con 'useradd --system wiseagent')
+Type=simple
 User=wiseagent
 Group=wiseagent
-
-# 2. Directorio de trabajo donde se encuentra la app
 WorkingDirectory=/opt/metrics
-
-# 3. Comando para iniciar la aplicación usando el ejecutable del entorno virtual
-ExecStart=/opt/metrics/venv/bin/wise-agent
-
-Restart=on-failure
+ExecStart=/opt/metrics/venv/bin/python /opt/metrics/main.py
+Restart=always
+RestartSec=10
+Environment=PYTHONUNBUFFERED=1
 
 [Install]
 WantedBy=multi-user.target

@@ -20,7 +20,7 @@ echo "=================================================="
 
 # 1. Dependencias del Sistema
 echo "📦 [1/6] Instalando dependencias del sistema..."
-dnf install -y python3 python3-pip rsync
+dnf install -y python3 python3-pip python3-devel gcc openssl-devel rsync
 
 # 2. Usuario de Servicio
 echo "👤 [2/6] Configurando usuario de servicio '$USER_NAME'..."
