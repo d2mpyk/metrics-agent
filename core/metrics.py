@@ -1,7 +1,7 @@
 # core/metrics.py
 
 import psutil
-from .system import get_system_info
+from .system import get_service_status, get_system_info
 
 
 def bytes_to_human_readable(bytes_value: int) -> str:
@@ -44,10 +44,14 @@ def get_disk_metrics(path="/"):
     }
 
 
-def collect_metrics():
+def collect_metrics(service_type="Web"):
+    service_status = get_service_status(service_type)
+
     return {
         "system": get_system_info(),
         "cpu": get_cpu_metrics(),
         "memory": get_memory_metrics(),
-        "disk": get_disk_metrics()
+        "disk": get_disk_metrics(),
+        "servicio": service_status["servicio"],
+        "status": service_status["status"]
     }

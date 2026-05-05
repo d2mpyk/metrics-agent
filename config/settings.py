@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     AES_SECRET_KEY: Optional[SecretStr] = None
     API_BASE_URL: str = "http://127.0.0.1:8000/api/v1"
     API_TIMEOUT: int = 10
+    SERVICE_TYPE: str = "Web"
 
     def get_aes_key_bytes(self) -> bytes:
         if self.AES_SECRET_KEY is None:

@@ -15,12 +15,14 @@ def test_settings_load_valid_env(monkeypatch):
     monkeypatch.setenv("INTERVAL_SECONDS", "10")
     monkeypatch.setenv("AES_SECRET_KEY", valid_key)
     monkeypatch.setenv("API_BASE_URL", "http://test-api.com")
+    monkeypatch.setenv("SERVICE_TYPE", "Asterisk-DB")
 
     settings = Settings()
 
     assert settings.INTERVAL_SECONDS == 10
     assert settings.AES_SECRET_KEY.get_secret_value() == valid_key
     assert settings.API_BASE_URL == "http://test-api.com"
+    assert settings.SERVICE_TYPE == "Asterisk-DB"
 
 
 def test_get_aes_key_bytes_valid(monkeypatch):

@@ -1,8 +1,9 @@
 # s:\WISE\Management\AGENTS\core\collector.py
 import psutil
+from core.system import get_service_status
 
 
-def get_system_metrics() -> dict:
+def get_system_metrics(service_type="Web") -> dict:
     """
     Recolecta métricas reales del sistema para enviar al servidor.
     Las claves deben coincidir con lo que espera el modelo ServerMetric.
@@ -21,6 +22,7 @@ def get_system_metrics() -> dict:
     # RED: Estadísticas de E/S de red (acumulativo)
     # pernic=False para obtener el total combinado de todas las interfaces
     net = psutil.net_io_counters(pernic=False)
+    service_status = get_service_status(service_type)
 
     return {
         "cpu": cpu_usage,
@@ -28,4 +30,6 @@ def get_system_metrics() -> dict:
         "disk": disk_usage,
         "net_sent": net.bytes_sent,
         "net_recv": net.bytes_recv,
+        "servicio": service_status["servicio"],
+        "status": service_status["status"],
     }

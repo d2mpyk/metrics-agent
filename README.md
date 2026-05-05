@@ -9,6 +9,8 @@ Este es un agente de monitoreo ligero y seguro diseñado para recolectar métric
     *   **RAM:** Uso porcentual de memoria virtual.
     *   **Disco:** Uso porcentual de la partición raíz (`/`).
     *   **Red:** Bytes enviados y recibidos (acumulativo).
+    *   **Servicio:** Tipo de servidor monitoreado (`Asterisk`, `DB`, `Asterisk-DB` o `Web`).
+    *   **Status:** Estado operativo del servicio monitoreado. El valor es `ok` solo cuando las unidades systemd requeridas responden `active`.
 
 2.  **Seguridad y Cifrado:**
     *   Todos los datos se cifran localmente antes de enviarse usando **AES-256 (CBC Mode)**.
@@ -19,6 +21,46 @@ Este es un agente de monitoreo ligero y seguro diseñado para recolectar métric
     *   Implementa el flujo **OAuth 2.0 Device Flow**.
     *   Si no existen credenciales, el agente inicia un proceso de registro y espera autorización.
     *   Gestiona automáticamente el almacenamiento seguro de tokens en `credentials.json`.
+
+4.  **Validación de Servicios:**
+    *   Ejecuta `systemctl is-active` según el tipo de servidor configurado.
+    *   Agrega las claves `servicio` y `status` al payload cifrado que se envía a la API.
+    *   Para servidores combinados `Asterisk-DB`, valida ambos servicios y solo reporta `ok` si los dos están activos.
+
+---
+
+## ⚙️ Configuración
+
+El agente puede configurarse con variables de entorno o un archivo `.env`:
+
+```bash
+API_BASE_URL=http://127.0.0.1:8000/api/v1
+INTERVAL_SECONDS=60
+SERVICE_TYPE=Web
+```
+
+Valores soportados para `SERVICE_TYPE`: `Asterisk`, `DB`, `Asterisk-DB`, `Web`.
+
+| `SERVICE_TYPE` | Comando validado | Condición para `status=ok` |
+| --- | --- | --- |
+| `Asterisk` | `systemctl is-active asterisk.service` | La respuesta es `active` |
+| `DB` | `systemctl is-active mysqld.service` | La respuesta es `active` |
+| `Asterisk-DB` | `systemctl is-active asterisk.service` y `systemctl is-active mysqld.service` | Ambas respuestas son `active` |
+| `Web` | `systemctl is-active httpd` | La respuesta es `active` |
+
+Ejemplo del contenido antes de cifrarse:
+
+```json
+{
+  "cpu": 12.5,
+  "ram": 48.2,
+  "disk": 61.7,
+  "net_sent": 123456,
+  "net_recv": 654321,
+  "servicio": "Web",
+  "status": "ok"
+}
+```
 
 ---
 

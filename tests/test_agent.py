@@ -11,6 +11,7 @@ def mock_settings():
     m.get_aes_key_bytes.return_value = b"0" * 32
     m.API_BASE_URL = "http://mock-api"
     m.API_TIMEOUT = 10
+    m.SERVICE_TYPE = "Web"
     return m
 
 
@@ -137,10 +138,11 @@ def test_run_loop_converts_iv_to_nonce(mock_settings, mock_credentials):
     agent._send_to_api.side_effect = stop_loop
 
     # 3. Ejecutamos (mockeando metrics para evitar uso de psutil real)
-    with patch("agent.get_system_metrics", return_value={"cpu": 1}):
+    with patch("agent.get_system_metrics", return_value={"cpu": 1}) as mock_metrics:
         agent.run()
 
     # 4. Verificaciones
+    mock_metrics.assert_called_once_with("Web")
     agent._send_to_api.assert_called_once()
     payload_sent = agent._send_to_api.call_args[0][0]
 

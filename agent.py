@@ -29,11 +29,14 @@ if not logger.handlers:
     log_path = os.path.join(base_dir, "agent.log")
 
     # 2. Handler de Archivo Rotativo (5 MB por archivo, max 3 backups)
-    file_handler = RotatingFileHandler(
-        log_path, maxBytes=5 * 1024 * 1024, backupCount=3
-    )
-    file_handler.setFormatter(formatter)
-    logger.addHandler(file_handler)
+    try:
+        file_handler = RotatingFileHandler(
+            log_path, maxBytes=5 * 1024 * 1024, backupCount=3
+        )
+        file_handler.setFormatter(formatter)
+        logger.addHandler(file_handler)
+    except OSError as exc:
+        logger.warning("File logging disabled: %s", exc)
 
 
 class MetricsAgent:
@@ -42,15 +45,21 @@ class MetricsAgent:
         self.settings = settings
         self.credentials = credentials
         self.interval = settings.INTERVAL_SECONDS
+        self.service_type = settings.SERVICE_TYPE
         self.shutdown_event = threading.Event()
         self.cipher = AESCipher(credentials["client_secret_key"])
 
     def run(self):
-        logger.info("Metrics Agent started")
+        logger.info("Metrics Agent started. Service type: %s", self.service_type)
 
         while not self.shutdown_event.is_set():
             try:
-                metrics = get_system_metrics()
+                metrics = get_system_metrics(self.service_type)
+                logger.info(
+                    "Service status collected. Service: %s | Status: %s",
+                    metrics.get("servicio"),
+                    metrics.get("status"),
+                )
 
                 encrypted = self.cipher.encrypt(metrics)
 

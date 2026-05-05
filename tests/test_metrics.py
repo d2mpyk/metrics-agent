@@ -12,6 +12,8 @@ def test_collect_metrics_structure():
     assert "cpu" in metrics
     assert "memory" in metrics
     assert "disk" in metrics
+    assert "servicio" in metrics
+    assert "status" in metrics
 
 
 def test_cpu_metrics_keys():
@@ -38,3 +40,15 @@ def test_disk_metrics_keys():
 
     assert "total_bytes" in disk
     assert "percent" in disk
+
+
+def test_collect_metrics_includes_service_status(monkeypatch):
+    monkeypatch.setattr(
+        "core.metrics.get_service_status",
+        lambda service_type: {"servicio": service_type, "status": "ok"},
+    )
+
+    metrics = collect_metrics("Asterisk")
+
+    assert metrics["servicio"] == "Asterisk"
+    assert metrics["status"] == "ok"
